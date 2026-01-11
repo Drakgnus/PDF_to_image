@@ -7,12 +7,16 @@ app = Flask(__name__)
 
 @app.route("/convert", methods=["POST"])
 def convert_pdf():
+    # Espera multipart/form-data com campo "file"
     file = request.files.get("file")
 
     if not file:
-        return jsonify({"error": "PDF não enviado"}), 400
+        return jsonify({"error": "PDF não enviado. Use o campo 'file'."}), 400
 
-    images = convert_from_bytes(file.read(), dpi=200)
+    try:
+        images = convert_from_bytes(file.read(), dpi=200)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
     result = []
     for i, img in enumerate(images):
@@ -20,7 +24,7 @@ def convert_pdf():
         img.save(buffer, format="PNG")
         result.append({
             "page": i + 1,
-            "image_base64": base64.b64encode(buffer.getvalue()).decode()
+            "image_base64": base64.b64encode(buffer.getvalue()).decode("utf-8")
         })
 
     return jsonify({
@@ -30,3 +34,4 @@ def convert_pdf():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=3000)
+
