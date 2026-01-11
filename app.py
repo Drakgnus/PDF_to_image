@@ -8,7 +8,7 @@ app = Flask(__name__)
 @app.route("/convert", methods=["POST"])
 def convert_pdf():
     # Espera multipart/form-data com campo "file"
-    file = request.files.get("file")
+    file = request.files.get("data")
 
     if not file:
         return jsonify({"error": "PDF não enviado. Use o campo 'file'."}), 400
