@@ -1,18 +1,27 @@
 from flask import Flask, request, jsonify
 from pdf2image import convert_from_bytes
-import io
-import base64
+import io, base64
 
 app = Flask(__name__)
 
 @app.route("/convert", methods=["POST"])
 def convert_pdf():
-    file = next(iter(request.files.values()), None)
 
-    if not file:
-        return jsonify({"error": "PDF não enviado"}), 400
+    if not request.files:
+        return jsonify({
+            "error": "Nenhum arquivo recebido",
+            "content_type": request.content_type
+        }), 400
 
-    images = convert_from_bytes(file.read(), dpi=200)
+    # pega QUALQUER arquivo enviado (n8n-safe)
+    file = next(iter(request.files.values()))
+
+    pdf_bytes = file.read()
+
+    if not pdf_bytes:
+        return jsonify({"error": "Arquivo vazio"}), 400
+
+    images = convert_from_bytes(pdf_bytes, dpi=200)
 
     result = []
     for i, img in enumerate(images):
