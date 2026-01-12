@@ -1,9 +1,7 @@
 from flask import Flask, request, jsonify
 from pdf2image import convert_from_bytes
-from pdfminer.high_level import extract_text
 import io
 import base64
-import tempfile
 
 app = Flask(__name__)
 
@@ -12,8 +10,8 @@ def convert_pdf():
     pdf_bytes = None
 
     # 1️⃣ multipart/form-data (file)
-    if request.files:
-        pdf_bytes = next(iter(request.files.values())).read()
+    if "file" in request.files:
+        pdf_bytes = request.files["file"].read()
 
     # 2️⃣ binário bruto (application/pdf)
     elif request.content_type == "application/pdf":
@@ -26,20 +24,6 @@ def convert_pdf():
     if not pdf_bytes:
         return jsonify({"error": "Nenhum PDF recebido"}), 400
 
-    # 🔍 TENTA EXTRAIR TEXTO (contexto)
-    with tempfile.NamedTemporaryFile(suffix=".pdf") as tmp:
-        tmp.write(pdf_bytes)
-        tmp.flush()
-        text = extract_text(tmp.name) or ""
-
-    # 👉 CASO TENHA TEXTO
-    if text.strip():
-        return jsonify({
-            "has_text": True,
-            "text": text
-        })
-
-    # 👉 CASO NÃO TENHA TEXTO → converte para imagem
     images = convert_from_bytes(pdf_bytes, dpi=200)
 
     result = []
@@ -52,7 +36,6 @@ def convert_pdf():
         })
 
     return jsonify({
-        "has_text": False,
         "pages": len(result),
         "images": result
     })
