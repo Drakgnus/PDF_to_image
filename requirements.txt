@@ -1,3 +1,4 @@
-flask
+Flask
 pdf2image
-pillow
+Pillow
+pdfminer.six
